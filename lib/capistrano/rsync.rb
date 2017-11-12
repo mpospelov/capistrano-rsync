@@ -35,18 +35,18 @@ task :rsync => %w[rsync:stage] do
     rsync << fetch(:rsync_stage) + "/"
     rsync << "#{user}#{role.hostname}:#{rsync_cache.call || release_path}"
 
-    Kernel.system *rsync
+    Kernel.system rsync.join(' ')
   end
 end
 
 namespace :rsync do
   task :hook_scm do
     Rake::Task.define_task("#{scm}:check") do
-      invoke "rsync:check" 
+      invoke "rsync:check"
     end
 
     Rake::Task.define_task("#{scm}:create_release") do
-      invoke "rsync:release" 
+      invoke "rsync:release"
     end
   end
 
@@ -80,7 +80,9 @@ namespace :rsync do
     next if !fetch(:rsync_cache)
 
     copy = %(#{fetch(:rsync_copy)} "#{rsync_cache.call}/" "#{release_path}/")
-    on roles(:all).each do execute copy end
+    on roles(:all) do
+      execute(copy)
+    end
   end
 
   # Matches the naming scheme of git tasks.
